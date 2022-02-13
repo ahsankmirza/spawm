@@ -17,16 +17,16 @@ Resources:
   AhsanMBucketPolicy:
     Type: AWS::S3::BucketPolicy
     Properties:
-      Bucket: !Ref AhsanMBucket # attach to bucket being created
+      Bucket: !Ref AhsanMBucket 
       PolicyDocument:
         Id: MyPolicy
         Version: 2012-10-17
         Statement:
           - Sid: PublicReadForGetBucketObjects
             Effect: Allow
-            Principal: '*' # wildcard, allow all requests
+            Principal: '*' 
             Action: 's3:GetObject'
-            Resource: !Join ['', ['arn:aws:s3:::', !Ref MyBucket, /*]]
+            Resource: !Join ['', ['arn:aws:s3:::', !Ref AhsanMBucket, /*]]
   CloudFrontDistribution:
     Type: AWS::CloudFront::Distribution
     Properties:
