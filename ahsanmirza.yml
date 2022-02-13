@@ -1,0 +1,76 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters: 
+  BucketName:
+    Description: Choose a unique name for the bucket. This will be in the S3 url to the SPA.
+    Type: String
+
+Resources:
+  AhsanMBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref BucketName
+      AccessControl: PublicRead 
+      WebsiteConfiguration: 
+        IndexDocument: index.html 
+        ErrorDocument: index.html 
+  AhsanMBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref AhsanMBucket # attach to bucket being created
+      PolicyDocument:
+        Id: MyPolicy
+        Version: 2012-10-17
+        Statement:
+          - Sid: PublicReadForGetBucketObjects
+            Effect: Allow
+            Principal: '*' # wildcard, allow all requests
+            Action: 's3:GetObject'
+            Resource: !Join ['', ['arn:aws:s3:::', !Ref MyBucket, /*]]
+  CloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Origins:
+            - DomainName: !Ref BucketName.s3.amazonaws.com
+              Id: AhsanMirza
+              CustomOriginConfig:
+                HTTPPort: 80
+                HTTPSPort: 443
+                OriginProtocolPolicy: https-only            
+          Enabled: 'true'
+          Aliases:
+            - mirzaahsan.example.com
+          DefaultRootObject: index.html
+          CustomErrorResponses:
+            - ErrorCode: 404
+              ResponseCode: 200
+              ResponsePagePath: /index.html
+          DefaultCacheBehavior:
+            AllowedMethods:
+              - DELETE
+              - GET
+              - HEAD
+              - OPTIONS
+              - PATCH
+              - POST
+              - PUT
+            TargetOriginId: AhsanMirza
+            ForwardedValues:
+              QueryString: 'false'
+              Cookies:
+                Forward: none
+            ViewerProtocolPolicy: redirect-to-https
+          ViewerCertificate:
+            CloudFrontDefaultCertificate: 'true'
+  Outputs:
+    CloudFrontDistributionDomain:
+      Value:
+        'Fn::GetAtt': [ CloudFrontDistribution, DomainName ]
+    CloudFrontDistributionId:
+      Value: 
+        !Ref CloudFrontDistribution
+    BucketName:
+      Value: !Ref BucketName
+    S3WebsiteURL:
+      Value: !GetAtt AhsanMBucket.WebsiteURL
